@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Whispers of the Hollow - Demo Level</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; color: #fff; }
+    canvas { display: block; margin: 0 auto; background: #2b2b2b; }
+  </style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="400"></canvas>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const keys = {};
+document.addEventListener('keydown', (e) => keys[e.key] = true);
+document.addEventListener('keyup', (e) => keys[e.key] = false);
+
+const player = {
+  x: 50,
+  y: 300,
+  w: 30,
+  h: 30,
+  color: '#4af',
+  dx: 0,
+  dy: 0,
+  speed: 3,
+  jump: -8,
+  grounded: false
+};
+
+const gravity = 0.4;
+const platforms = [
+  { x: 0, y: 370, w: 800, h: 30 },
+  { x: 200, y: 300, w: 100, h: 10 },
+  { x: 400, y: 250, w: 100, h: 10 },
+  { x: 600, y: 200, w: 100, h: 10 }
+];
+
+const collectible = { x: 750, y: 160, w: 20, h: 20, color: '#ff0', collected: false };
+
+function update() {
+  // Movement
+  if (keys['ArrowLeft']) player.dx = -player.speed;
+  else if (keys['ArrowRight']) player.dx = player.speed;
+  else player.dx = 0;
+
+  // Jump
+  if (keys[' ']) {
+    if (player.grounded) {
+      player.dy = player.jump;
+      player.grounded = false;
+    }
+  }
+
+  // Apply gravity
+  player.dy += gravity;
+
+  // Update position
+  player.x += player.dx;
+  player.y += player.dy;
+
+  // Collision detection
+  player.grounded = false;
+  for (let p of platforms) {
+    if (player.x < p.x + p.w &&
+        player.x + player.w > p.x &&
+        player.y < p.y + p.h &&
+        player.y + player.h > p.y) {
+      // Colliding
+      if (player.dy > 0) {
+        player.y = p.y - player.h;
+        player.dy = 0;
+        player.grounded = true;
+      }
+    }
+  }
+
+  // Collectible
+  if (!collectible.collected &&
+      player.x < collectible.x + collectible.w &&
+      player.x + player.w > collectible.x &&
+      player.y < collectible.y + collectible.h &&
+      player.y + player.h > collectible.y) {
+    collectible.collected = true;
+    alert('You found the mysterious journal! Demo level complete.');
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw platforms
+  ctx.fillStyle = '#444';
+  for (let p of platforms) {
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+  }
+
+  // Draw collectible
+  if (!collectible.collected) {
+    ctx.fillStyle = collectible.color;
+    ctx.fillRect(collectible.x, collectible.y, collectible.w, collectible.h);
+  }
+
+  // Draw player
+  ctx.fillStyle = player.color;
+  ctx.fillRect(player.x, player.y, player.w, player.h);
+}
+
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+</body>
+</html>
